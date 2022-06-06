@@ -39,8 +39,7 @@ pipeline{
         always{
             mail to: "crowne2007@gmail.com",
             subject: "Project: ${env.JOB_NAME} ",
-            body: "Build Number: ${env.BUILD_NUMBER} 
-                  URL of the build: ${env.BUILD_URL}"
+            body: "Build Number: ${env.BUILD_NUMBER} \nURL of the build: ${env.BUILD_URL}"
         }
     }
-}
+}        
