@@ -45,12 +45,29 @@ pipeline{
                 }
             }
         }
+        stage("Pushing the Helm Chart to Nexus"){
+            steps{
+                script{
+                    withCredentials([string(credentialsId: 'nexus_login', variable: 'nexus_repo_password')]) {
+                        dir('kubernetes/') {
+                            sh '''
+                                helmversion=$( helm show chart myapp | grep version | cut -d: -f 2 | tr -d ' ')
+                                tar -czvf  myapp-${helmversion}.tgz myapp/
+                                curl -u admin:$nexus_repo_password http://43.204.228.104:8081/repository/helm-hosted/ --upload-file myapp-${helmversion}.tgz -v
+
+                            '''
+                        }
+                    }
+                }
+            }
+        }
+
     }
     post{
         always{
             mail to: "crowne2007@gmail.com",
             subject: "${currentBuild.result} CI: Project name -> ${env.JOB_NAME}",
-            body: "Build Number: ${env.BUILD_NUMBER} \nURL of the build: ${env.BUILD_URL}"
+            body: "Build Number: ${env.BUILD_NUMBER} \nBuild URL: ${env.BUILD_URL}"
         }
     }
 }
