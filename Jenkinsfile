@@ -61,6 +61,18 @@ pipeline{
                 }
             }
         }
+        stage('manual approval'){
+            steps{
+                script{
+                    timeout(10) {
+                        mail to: "crowne2007@gmail.com",
+                        subject: "${currentBuild.result} CI: Project name -> ${env.JOB_NAME}",
+                        body: "Build Number: ${env.BUILD_NUMBER} \nGo to build url and approve the deployment request. \nBuild URL: ${env.BUILD_URL}"                        
+                        input(message: "Deploy ${env.JOB_NAME} job ?", ok: 'Deploy')
+                    }
+                }
+            }
+        }
         stage('Deploying Application on K8 Cluster') {
             steps {
                 script{
@@ -69,6 +81,17 @@ pipeline{
                             sh 'helm upgrade --install --set image.repository="nexus.josin.ml:9999/springapp" --set image.tag="${VERSION}" myjavaapp myapp/'
                         }
                     }
+                }
+            }
+        }
+
+        stage('verifying app deployment'){
+            steps{
+                script{
+                     withCredentials([kubeconfigFile(credentialsId: 'kubernetes-config', variable: 'KUBECONFIG')]) {
+                         sh 'kubectl run curl --image=curlimages/curl -i --rm --restart=Never -- curl myjavaapp-myapp:8080'
+
+                     }
                 }
             }
         }
