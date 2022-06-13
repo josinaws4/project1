@@ -25,10 +25,10 @@ pipeline{
                 script{
                     withCredentials([string(credentialsId: 'nexus_login', variable: 'nexus_repo_password')]) {
                         sh '''
-                            docker build -t 43.204.228.104:8083/springapp:${VERSION} .
-                            docker login -u admin -p $nexus_repo_password 43.204.228.104:8083
-                            docker push  43.204.228.104:8083/springapp:${VERSION}
-                            docker rmi 43.204.228.104:8083/springapp:${VERSION}
+                            docker build -t nexus.josin.ml:9999/springapp:${VERSION} .
+                            docker login -u admin -p $nexus_repo_password nexus.josin.ml:9999
+                            docker push  nexus.josin.ml:9999/springapp:${VERSION}
+                            docker rmi nexus.josin.ml:9999/springapp:${VERSION}
                         '''
                     }
                 }
@@ -53,7 +53,7 @@ pipeline{
                             sh '''
                                 helmversion=$( helm show chart myapp | grep version | cut -d: -f 2 | tr -d ' ')
                                 tar -czvf  myapp-${helmversion}.tgz myapp/
-                                curl -u admin:$nexus_repo_password http://43.204.228.104:8081/repository/helm-hosted/ --upload-file myapp-${helmversion}.tgz -v
+                                curl -u admin:$nexus_repo_password http://nexus.josin.ml:8081/repository/helm-hosted/ --upload-file myapp-${helmversion}.tgz -v
 
                             '''
                         }
@@ -66,7 +66,7 @@ pipeline{
                 script{
                     withCredentials([kubeconfigFile(credentialsId: 'kubernetes-config', variable: 'KUBECONFIG')]) {
                         dir('kubernetes/') {
-                            sh 'helm upgrade --install --set image.repository="43.204.228.104:8083/springapp" --set image.tag="${VERSION}" myjavaapp myapp/'
+                            sh 'helm upgrade --install --set image.repository="nexus.josin.ml:9999/springapp" --set image.tag="${VERSION}" myjavaapp myapp/'
                         }
                     }
                 }
@@ -80,4 +80,4 @@ pipeline{
             body: "Build Number: ${env.BUILD_NUMBER} \nBuild URL: ${env.BUILD_URL}"
         }
     }
-}    
+}
